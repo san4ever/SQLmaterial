@@ -1,0 +1,349 @@
+-- Data Manipulations
+-- Create table with sub queries.
+-- This is also known as CTAS query
+/*
+TABLE LIST CREATED FOR SESSION
+
+- EMPLOYEE_JOB_DETAILS
+
+*/
+
+
+
+/*
+CREATE table <<TableName>> as <<Sub query>>
+*/
+
+create table EMPLOYEE_JOB_DETAILS AS
+      SELECT EMP.FIRST_NAME  , JOBS.JOB_TITLE TITLE  FROM EMPLOYEES EMP INNER JOIN JOBS USING (JOB_ID) ;
+      
+SELECT  * FROM EMPLOYEE_JOB_DETAILS;
+
+drop table EMPLOYEE_JOB_DETAILS;
+
+/*
+  With this new table is created with alias name from subquery.
+  If you dont specify the name , the underline column name will be used.
+  The data type are taken from the underline column.
+  No other consttraint other than " Explicitly ceated not null" constraint are copied to new table with system genertaed name.
+  
+  NOT NULL constraints that were created implicitly—for example, as
+  part of a PRIMARY KEY constraint—are not included.
+  After creations , this new table has no link to underline tables.
+*/
+-- If exprerssion used CTAS statment , we need to provide the Alias name 
+-- below query will give error.
+create table EMPLOYEE_JOB_DETAILS AS
+      SELECT EMP.FIRST_NAME  , JOBS.JOB_TITLE TITLE , EMP.SALARY*2.5  FROM EMPLOYEES EMP INNER JOIN JOBS USING (JOB_ID) ;
+
+
+-- Explictly declaring table column
+-- No need to declare datatype as they are taken from source table
+
+create table EMPLOYEE_JOB_DETAILS( id , FNAME ,  TITLE ,NEWSAL) AS
+SELECT EMP.EMPLOYEE_ID , EMP.FIRST_NAME  , JOBS.JOB_TITLE TITLE , EMP.SALARY*2.5  FROM EMPLOYEES EMP INNER JOIN JOBS USING (JOB_ID) ;
+
+SELECT * FROM EMPLOYEE_JOB_DETAILS;
+
+drop table EMPLOYEE_JOB_DETAILS;
+
+
+/*
+================================================
+INSERT and Subqueries
+================================================
+*/
+
+CREATE TABLE EMPLOYEE_JOB_DETAILS (ID NUMBER NOT NULL, FNAME CHAR(50) , JOBTITLE CHAR(100) , SALARY NUMBER);
+
+-- SYNTAX
+-- INSERT INTO <<TABLE NAME>> <<SUB QUERY>>
+
+INSERT INTO EMPLOYEE_JOB_DETAILS 
+(SELECT EMP.EMPLOYEE_ID , EMP.FIRST_NAME  , JOBS.JOB_TITLE TITLE , EMP.SALARY*2.5  FROM EMPLOYEES EMP INNER JOIN JOBS USING (JOB_ID)  );
+
+SELECT * FROM EMPLOYEE_JOB_DETAILS;
+drop table EMPLOYEE_JOB_DETAILS;
+
+INSERT INTO EMPLOYEE_JOB_DETAILS (ID , FNAME , JOBTITLE , SALARY )
+(SELECT EMP.EMPLOYEE_ID , EMP.FIRST_NAME  , JOBS.JOB_TITLE TITLE , EMP.SALARY*2.5  FROM EMPLOYEES EMP INNER JOIN JOBS USING (JOB_ID)  );
+
+SELECT * FROM EMPLOYEE_JOB_DETAILS;
+drop table EMPLOYEE_JOB_DETAILS;
+-- IF ANY STATMENTS FAIL DUE TO CONSTRAINT FAILURE, THE ENTIRE TRAX IS ROLL BACK.
+
+
+/*
+================================================
+UPDATE and Correlated Subqueries
+================================================
+*/
+/*
+  NORMAL UPADTE WE KNOW. THIS SECTION WILL EXPLAIN CAPABILITIES BEYOND NORMAL UPDATE.
+  THIS SECTION DESCRIIBE UPDATE STATEMENT WITH CORELATED SUB QUERIES.
+*/
+
+INSERT INTO EMPLOYEE_JOB_DETAILS 
+(SELECT EMP.EMPLOYEE_ID , EMP.FIRST_NAME  , JOBS.JOB_TITLE TITLE , EMP.SALARY  FROM EMPLOYEES EMP INNER JOIN JOBS USING (JOB_ID)  );
+commit;
+select * from EMPLOYEE_JOB_DETAILS;
+
+
+update  EMPLOYEE_JOB_DETAILS EMPO 
+set salary = (select avg(salary) from EMPLOYEE_JOB_DETAILS EMPI where EMPI.JOBTITLE = EMPO.JOBTITLE  );
+
+SELECT * FROM EMPLOYEE_JOB_DETAILS;
+ROLLBack;
+
+/*
+===================================================================
+    Multitable INSERT
+===================================================================
+*/
+-- Normal insert
+-- Insert a row;
+INSERT INTO EMPLOYEE_JOB_DETAILS VALUES (1 , 'sample 1' , 'sample1' , 20000);
+
+CREATE TABLE JOB_DETAILS (ID NUMBER NOT NULL, EMPNAME CHAR(50) , JOBTITLE CHAR(100));
+CREATE TABLE DEPT_DETAILS (ID NUMBER NOT NULL, EMPNAME CHAR(50)  , DEPT CHAR(100));
+
+/*
+INSERT ALL
+INTO tab1 VALUES (col_list1)
+INTO tab2 VALUES (col_list2)
+INTO tab3 VALUES (col_list3)
+...
+subquery;
+
+*/
+
+
+-- UNCONDITIONAL INSERT.
+INSERT ALL
+INTO JOB_DETAILS VALUES (ID ,FNAME ,TITLE  )
+INTO DEPT_DETAILS VALUES (ID , FNAME , DNAME)
+
+SELECT EMP.EMPLOYEE_ID ID , EMP.FIRST_NAME FNAME, JOBS.JOB_TITLE TITLE , DEPT.DEPARTMENT_NAME DNAME
+                            FROM HR.EMPLOYEES EMP
+                            INNER JOIN  HR.JOBS JOBS USING (JOB_ID )
+                            INNER JOIN HR.DEPARTMENTS DEPT USING (DEPARTMENT_ID);
+                            
+
+SELECT * FROM JOB_DETAILS;
+SELECT * FROM DEPT_DETAILS;
+
+DELETE FROM JOB_DETAILS;
+DELETE FROM DEPT_DETAILS;
+
+
+-- UNCONDITIONLAL INSERT ALLL  STATEMENT 
+INSERT ALL
+    INTO JOB_DETAILS (ID , EMPNAME , JOBTITLE) VALUES (ID , FNAME , TITLE)
+    INTO DEPT_DETAILS (ID , EMPNAME , DEPT) VALUES  (ID , FNAME , TITLE)
+    
+SELECT EMP.EMPLOYEE_ID ID , EMP.FIRST_NAME FNAME, JOBS.JOB_TITLE TITLE , DEPT.DEPARTMENT_NAME DNAME
+                            FROM HR.EMPLOYEES EMP
+                            INNER JOIN  HR.JOBS JOBS USING (JOB_ID )
+                            INNER JOIN HR.DEPARTMENTS DEPT USING (DEPARTMENT_ID);
+
+-- iN ABOVE STATMENTS ALL THE ROWS WE GOT FROM SUB QUERY WERE INSERTED INTO THEE REF TABLES.
+-- NOW IF WE WANT TO INSERT ONLY REFCORDS WHICH MEETS CERTAIN CONDITION , WE NEED TO USE CONDITONAL INSERT STATEMENT.
+
+
+--Conditional INSERT
+/*
+INSERT 
+    FIRST
+       WHEN ottl <= 100000 THEN
+          INTO small_orders
+             VALUES(oid, ottl, sid, cid)
+       WHEN ottl > 100000 and ottl <= 200000 THEN
+          INTO medium_orders
+             VALUES(oid, ottl, sid, cid)
+       WHEN ottl > 290000 THEN
+          INTO special_orders
+       WHEN ottl > 200000 THEN
+          INTO large_orders
+             VALUES(oid, ottl, sid, cid)
+        ELSE
+          INTO large_orders
+             VALUES(oid, ottl, sid, cid)
+        
+       SELECT o.order_id oid, o.customer_id cid, o.order_total ottl,
+          o.sales_rep_id sid, c.credit_limit cl, c.cust_email cem
+          FROM orders o, customers c
+          WHERE o.customer_id = c.customer_id
+
+*/
+
+DROP TABLE JOB_DETAILS ; 
+DROP TABLE DEPT_DETAILS;
+
+CREATE TABLE JOB_DETAILS (ID NUMBER NOT NULL, EMPNAME CHAR(50) , JOBTITLE CHAR(100) ,  SLARAY NUMBER);
+CREATE TABLE DEPT_DETAILS (ID NUMBER NOT NULL, EMPNAME CHAR(50)  , DEPT CHAR(100) , SLARAY NUMBER);
+
+
+INSERT
+    FIRST
+       WHEN TITLE = 'President' THEN
+           INTO JOB_DETAILS (ID , EMPNAME , JOBTITLE , SLARAY) VALUES (ID , FNAME , TITLE , SLARAY*4)
+       WHEN TITLE != 'President' THEN
+          INTO JOB_DETAILS (ID , EMPNAME , JOBTITLE , SLARAY) VALUES (ID , FNAME , TITLE , SLARAY*1.5)
+       WHEN DNAME = 'Retail Sales'  THEN
+          INTO DEPT_DETAILS (ID , EMPNAME , DEPT, SLARAY) VALUES  (ID , FNAME , DNAME ,  SLARAY*1.5)
+
+      
+SELECT EMP.EMPLOYEE_ID ID , EMP.FIRST_NAME FNAME, JOBS.JOB_TITLE TITLE , DEPT.DEPARTMENT_NAME DNAME , EMP.SALARY SLARAY
+                            FROM HR.EMPLOYEES EMP
+                            INNER JOIN  HR.JOBS JOBS USING (JOB_ID )
+                            INNER JOIN HR.DEPARTMENTS DEPT USING (DEPARTMENT_ID);
+
+
+DELETE FROM JOB_DETAILS;
+DELETE FROM DEPT_DETAILS;
+
+
+SELECT * FROM HR.DEPARTMENTS;
+
+--- ELTS WRITE ONE MORE STATEMENT
+INSERT 
+    FIRST 
+    WHEN REGEXP_LIKE( DNAME , 'Marketing' ) THEN
+         INTO DEPT_DETAILS  (ID , EMPNAME , DEPT, SLARAY) VALUES  (ID , FNAME , DNAME ,  SLARAY*2)
+    ELSE
+         INTO DEPT_DETAILS  (ID , EMPNAME , DEPT, SLARAY) VALUES  (ID , FNAME , DNAME ,  1)
+
+SELECT EMP.EMPLOYEE_ID ID , EMP.FIRST_NAME FNAME, JOBS.JOB_TITLE TITLE , DEPT.DEPARTMENT_NAME DNAME , EMP.SALARY SLARAY
+                            FROM HR.EMPLOYEES EMP
+                            INNER JOIN  HR.JOBS JOBS USING (JOB_ID )
+                            INNER JOIN HR.DEPARTMENTS DEPT USING (DEPARTMENT_ID);
+
+
+SELECT * FROM DEPT_DETAILS;
+DROP TABLE JOB_DETAILS;
+DROP TABLE DEPT_DETAILS;
+
+
+-- oNE MORE EXAMPLE
+CREATE TABLE DEPTSHIPPING (ID NUMBER NOT NULL, EMPNAME CHAR(50) , DEPTN CHAR(100) ,  SLARAY NUMBER);
+CREATE TABLE DEPTFINANCE (ID NUMBER NOT NULL, EMPNAME CHAR(50) , DEPTN CHAR(100) ,  SLARAY NUMBER);
+CREATE TABLE DEPTMARKETING (ID NUMBER NOT NULL, EMPNAME CHAR(50) , DEPTN CHAR(100) ,  SLARAY NUMBER);
+CREATE TABLE DEPTNEW (ID NUMBER NOT NULL, EMPNAME CHAR(50) , DEPTN CHAR(100) ,  SLARAY NUMBER);
+
+
+--SIGNIFICANCE OF ALL KEYWORD
+INSERT 
+    ALL
+        WHEN DNAME = 'Shipping' THEN
+        INTO DEPTSHIPPING (ID , EMPNAME , DEPTN , SLARAY ) VALUES ( ID ,FNAME ,DNAME ,  SLARAY )
+        
+        WHEN DNAME = 'Finance' THEN
+        INTO DEPTFINANCE (ID , EMPNAME , DEPTN , SLARAY ) VALUES ( ID ,FNAME ,DNAME ,  SLARAY )
+
+        
+        WHEN DNAME = 'Marketing' THEN
+        INTO DEPTMARKETING (ID , EMPNAME , DEPTN , SLARAY ) VALUES ( ID ,FNAME ,DNAME ,  SLARAY )    
+
+        WHEN 1=1 THEN
+        INTO DEPTNEW (ID , EMPNAME , DEPTN , SLARAY ) VALUES ( ID ,FNAME ,DNAME ,  0 ) 
+    
+    SELECT EMP.EMPLOYEE_ID ID , EMP.FIRST_NAME FNAME, DEPT.DEPARTMENT_NAME DNAME , EMP.SALARY SLARAY
+                            FROM HR.EMPLOYEES EMP
+                            INNER JOIN HR.DEPARTMENTS DEPT USING (DEPARTMENT_ID);
+
+
+SELECT * FROM DEPTSHIPPING;
+
+SELECT * FROM DEPTFINANCE;
+
+SELECT * FROM DEPTMARKETING;
+
+SELECT * FROM DEPTNEW;
+
+
+  
+DELETE FROM DEPTSHIPPING;
+DELETE FROM DEPTSHIPPING;
+DELETE FROM DEPTSHIPPING;
+DELETE FROM DEPTNEW;
+
+--SIGNIFICANCE OF FIRST KEYWORD
+
+
+
+/*
+The INSERT ALL will evaluate each and every WHEN condition, and process
+all INTO clauses for all WHEN conditions that evaluate to true. Therefore the
+INSERT ALL may result in a single row being added to more than one table.
+The INSERT FIRST will evaluate every WHEN condition until one of them
+evaluates to true. It will then process that WHEN condition’s INTO, and skip the
+remaining WHEN conditions. The INSERT FIRST will only process zero or one
+WHEN condition; however, it may also result in a single row being added to more than
+one table, but only if the first true WHEN condition has more than one INTO clause.
+*/
+
+-- LETS REPEAT THE EX BY FIRST KEYWORD
+INSERT 
+    FIRST
+        WHEN DNAME = 'Shipping' THEN
+        INTO DEPTSHIPPING (ID , EMPNAME , DEPTN , SLARAY ) VALUES ( ID ,FNAME ,DNAME ,  SLARAY )
+        
+        WHEN DNAME = 'Finance' THEN
+        INTO DEPTFINANCE (ID , EMPNAME , DEPTN , SLARAY ) VALUES ( ID ,FNAME ,DNAME ,  SLARAY )
+
+        
+        WHEN DNAME = 'Marketing' THEN
+        INTO DEPTMARKETING (ID , EMPNAME , DEPTN , SLARAY ) VALUES ( ID ,FNAME ,DNAME ,  SLARAY )    
+
+        WHEN 1=1 THEN
+        INTO DEPTNEW (ID , EMPNAME , DEPTN , SLARAY ) VALUES ( ID ,FNAME ,DNAME ,  0 ) 
+    
+    SELECT EMP.EMPLOYEE_ID ID , EMP.FIRST_NAME FNAME, DEPT.DEPARTMENT_NAME DNAME , EMP.SALARY SLARAY
+                            FROM HR.EMPLOYEES EMP
+                            INNER JOIN HR.DEPARTMENTS DEPT USING (DEPARTMENT_ID);
+
+SELECT * FROM DEPTSHIPPING;
+SELECT * FROM DEPTFINANCE;
+SELECT * FROM DEPTMARKETING;
+SELECT * FROM DEPTNEW;
+
+
+
+-- merge statement.
+--MERGE statement combines the functionality of INSERT, UPDATE, and DELETE, all into a single SQL statement
+-- it will perform more efficiently as its a signle pass through database than using individual dml statment.
+
+/*
+01 MERGE INTO table
+02 USING table | subquery
+03 ON condition
+04 WHEN MATCHED THEN UPDATE SET col = expression | DEFAULT
+05 where_clause
+0
+07 WHEN NOT MATCHED THEN INSERT (col, col2)
+08 VALUES (expr1, expr2 | DEFAULT)
+09 where_clause << APPLIED ON USING DATASOURCE >>
+10 WHERE condition;
+*/
+
+CREATE TABLE EMPDEPTJOB (ID NUMBER NOT NULL, EMPNAME CHAR(30) , JOBTITLE CHAR(30) , DNAME CHAR(30), SALARY NUMBER);
+
+MERGE INTO EMPDEPTJOB JOBD
+USING (SELECT  EMP.EMPLOYEE_ID EID,EMP.FIRST_NAME FNAME, JOBS.JOB_TITLE TITLE  ,DEPT.DEPARTMENT_NAME DNAME , EMP.SALARY SALARY FROM HR.EMPLOYEES EMP INNER JOIN HR.JOBS JOBS USING (JOB_ID)
+                            INNER JOIN HR.DEPARTMENTS DEPT USING (DEPARTMENT_ID)) SUBQ
+ON ( JOBD.ID  = SUBQ.EID)
+WHEN MATCHED THEN UPDATE
+    SET SALARY = SUBQ.SALARY * 2
+WHEN NOT MATCHED THEN INSERT
+   (ID ,EMPNAME , DNAME , SALARY )   VALUES (SUBQ.EID , SUBQ.FNAME , SUBQ.DNAME , SUBQ.SALARY)
+
+
+
+
+SELECT * FROM EMPDEPTJOB;
+
+
+DROP TABLE EMPDEPTJOB;
+
+
+

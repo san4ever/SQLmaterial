@@ -1,0 +1,34 @@
+--HIRACHICAL QUERY ASSIGNMENT
+
+-- Display employee Hirarchy with there job_id.
+-- Display all the employees working under employee id 101
+-- Display all the employees working under employee = 108
+
+-- display complete hirarchy with employee id , his manager id  employee and his manager job title.
+-- Display the differet roles as per there hirarchy in org
+
+-- Display all the employees who are working above employee id = 113
+-- Display all the employees whome employee = 183 is reporting directly and in directly
+
+-- Display the top to bottom hirarchy 
+-- Apply filter to remove employee with id = 145
+-- Modify the above query to exclude complete branch under employee_id = 103
+
+
+--Display the complete hirarcy with employee job title. order  the rows using order by clause
+-- Repeat the above query using order sibiling by clause
+/*
+-- see the output .
+--ORDER SIBLINGS sorts rows within each given level, not across levels,
+--thus retaining the hierarchical relationship across rows of output.
+--Note that our earlier use of ORDER BY did not create an error message,
+*/
+
+-- Display title with sys_connect_by path funcion
+
+
+
+
+
+
+
